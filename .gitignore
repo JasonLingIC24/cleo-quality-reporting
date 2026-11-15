@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+
+# Generated reports
+/reports/
+!reports/.gitkeep
+
+# Downloaded test artifacts
+artifacts/
+
+# Keep directory structure if required
+!artifacts/.gitkeep
+
+*.log
+.env
