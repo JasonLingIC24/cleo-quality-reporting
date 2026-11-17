@@ -4,6 +4,8 @@ import { QualityReport } from "../models/QualityReport";
 import { TestRun } from "../models/TestRun";
 import { TestSuiteRun } from "../models/TestSuiteRun";
 import { ReleaseAssessmentFactory } from "./ReleaseAssessmentFactory";
+import { ReleaseTestPlan } from "../models/ReleaseTestPlan";
+import { TestPlanProgress } from "../models/TestPlanProgress";
 
 export class QualityReportFactory {
   static create(
@@ -12,6 +14,8 @@ export class QualityReportFactory {
     backendIntegration: TestSuiteRun,
     frontendCoverage: CoverageSummary,
     manualRegression: ManualRegressionRun[] = [],
+    releaseTestPlan?: ReleaseTestPlan,
+    testPlanProgress?: TestPlanProgress,
   ): QualityReport {
     const report: QualityReport = {
       executionDate: cypress.executionDate,
@@ -25,6 +29,10 @@ export class QualityReportFactory {
       frontendCoverage,
 
       manualRegression,
+
+      releaseTestPlan,
+
+      testPlanProgress,
     };
     report.assessment = ReleaseAssessmentFactory.create(report);
 

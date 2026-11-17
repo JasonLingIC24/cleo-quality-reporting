@@ -1,67 +1,115 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-
-import { Octokit } from "@octokit/rest";
+import { GitHubConfig } from "./GitHubConfig";
+import { ReleaseTestPlan } from "../models/ReleaseTestPlan";
+import { GitHubArtifact } from "../models/GitHubArtifact";
+import { GitHubArtifactsResponse } from "./models/GitHubArtifactsResponse";
 
 export class GitHubArtifactDownloader {
-  constructor(private readonly token: string) {}
-
-  async downloadLatestRunArtifacts(
-    owner: string,
-    repo: string,
-    outputDirectory: string,
+  async downloadArtifactsForRelease(
+    releaseTestPlan: ReleaseTestPlan,
   ): Promise<void> {
-    const octokit = new Octokit({
-      auth: this.token,
-    });
+    const runId = releaseTestPlan.githubRunId;
 
-    const runs = await octokit.actions.listWorkflowRunsForRepo({
-      owner,
-      repo,
-      per_page: 20,
-    });
+    if (this.isRunCached(runId)) {
+      console.log(`Using cached artifacts for run ${runId}`);
 
-    const latestRun = runs.data.workflow_runs.find(
-      (run) => run.name === "Manual Full Test Suite",
-    );
-
-    if (!latestRun) {
-      throw new Error("Could not find Manual Full Test Suite run");
+      return;
     }
 
-    console.log(`Using workflow run ${latestRun.id}`);
+    console.log(`Release Version: ${releaseTestPlan.releaseVersion}`);
 
-    const artifacts = await octokit.actions.listWorkflowRunArtifacts({
-      owner,
-      repo,
-      run_id: latestRun.id,
+    const artifacts = await this.listArtifacts(releaseTestPlan.githubRunId);
+
+    for (const artifact of artifacts) {
+      await this.downloadArtifact(releaseTestPlan.githubRunId, artifact);
+    }
+  }
+
+  private async listArtifacts(runId: string): Promise<GitHubArtifact[]> {
+    const response = await fetch(
+      `https://api.github.com/repos/${GitHubConfig.owner}/${GitHubConfig.repo}/actions/runs/${runId}/artifacts`,
+      {
+        headers: {
+          Authorization: `Bearer ${GitHubConfig.token}`,
+          Accept: "application/vnd.github+json",
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to list artifacts: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    const payload = (await response.json()) as GitHubArtifactsResponse;
+
+    console.log(`Found ${payload.total_count} artifact(s)`);
+
+    for (const artifact of payload.artifacts) {
+      console.log(`- ${artifact.name}`);
+    }
+
+    return payload.artifacts;
+  }
+
+  private async downloadArtifact(
+    runId: string,
+    artifact: GitHubArtifact,
+  ): Promise<void> {
+    console.log(`Downloading ${artifact.name}`);
+
+    const response = await fetch(artifact.archive_download_url, {
+      headers: {
+        Authorization: `Bearer ${GitHubConfig.token}`,
+        Accept: "application/vnd.github+json",
+      },
     });
 
-    fs.mkdirSync(outputDirectory, {
+    if (!response.ok) {
+      throw new Error(
+        `Failed to download ${artifact.name}: ${response.status}`,
+      );
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+
+    fs.mkdirSync("./artifacts", {
       recursive: true,
     });
 
-    for (const artifact of artifacts.data.artifacts) {
-      const extractDirectory = path.join(outputDirectory, artifact.name);
+    const fileName = `${artifact.name}.zip`;
 
-      if (fs.existsSync(extractDirectory)) {
-        console.log(`Skipping ${artifact.name} (already downloaded)`);
+    const runDirectory = this.getRunDirectory(runId);
 
-        continue;
-      }
+    fs.mkdirSync(runDirectory, {
+      recursive: true,
+    });
 
-      console.log(`Downloading ${artifact.name}`);
+    const filePath = path.join(runDirectory, fileName);
 
-      const zip = await octokit.actions.downloadArtifact({
-        owner,
-        repo,
-        artifact_id: artifact.id,
-        archive_format: "zip",
-      });
+    fs.writeFileSync(filePath, buffer);
 
-      const zipPath = path.join(outputDirectory, `${artifact.name}.zip`);
+    console.log(`Saved ${filePath}`);
+  }
 
-      fs.writeFileSync(zipPath, Buffer.from(zip.data as ArrayBuffer));
-    }
+  private getRunDirectory(runId: string): string {
+    return path.join("./artifacts/runs", runId);
+  }
+
+  private isRunCached(runId: string): boolean {
+    return fs.existsSync(
+      path.join(
+        this.getRunDirectory(runId),
+        "extracted",
+        "cypress",
+        "mochawesome.json",
+      ),
+    );
+  }
+
+  getCurrentRunDirectory(releaseTestPlan: ReleaseTestPlan): string {
+    return this.getRunDirectory(releaseTestPlan.githubRunId);
   }
 }

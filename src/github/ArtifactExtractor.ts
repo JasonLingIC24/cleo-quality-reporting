@@ -4,7 +4,7 @@ import * as path from "node:path";
 import AdmZip from "adm-zip";
 
 export class ArtifactExtractor {
-  extract(artifactsDirectory = "./artifacts"): void {
+  extract(artifactsDirectory: string): void {
     const extractionRoot = path.join(artifactsDirectory, "extracted");
 
     fs.mkdirSync(extractionRoot, {

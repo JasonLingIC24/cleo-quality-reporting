@@ -102,6 +102,76 @@ export class ManagementReportGenerator {
     lines.push("");
 
     //
+    // Release Test Plan
+    //
+
+    if (report.releaseTestPlan) {
+      lines.push("## Release Test Plan");
+
+      lines.push("");
+
+      lines.push(`Release Version: ${report.releaseTestPlan.releaseVersion}`);
+
+      lines.push("");
+
+      lines.push(`GitHub Run ID: ${report.releaseTestPlan.githubRunId}`);
+
+      lines.push("");
+
+      lines.push(
+        `Planned Manual Workbooks: ${report.releaseTestPlan.manualWorkbooks.length}`,
+      );
+
+      lines.push("");
+
+      lines.push("| Workbook | Owner |");
+
+      lines.push("|----------|-------|");
+
+      for (const workbook of report.releaseTestPlan.manualWorkbooks) {
+        lines.push(`| ${workbook.id} | ${workbook.owner ?? "Unassigned"} |`);
+      }
+
+      lines.push("");
+    }
+
+    //
+    // Test Plan Progress
+    //
+
+    if (report.testPlanProgress) {
+      const progress = report.testPlanProgress;
+
+      lines.push("### Test Plan Progress");
+
+      lines.push("");
+
+      lines.push(`- Planned Workbooks: ${progress.plannedWorkbooks}`);
+
+      lines.push(`- Complete: ${progress.completeWorkbooks}`);
+
+      lines.push(`- In Progress: ${progress.inProgressWorkbooks}`);
+
+      lines.push(`- Not Started: ${progress.notStartedWorkbooks}`);
+
+      lines.push(`- Completion: ${progress.completionPercentage}%`);
+
+      lines.push("");
+
+      let status = "🔴 In Progress";
+
+      if (progress.completeWorkbooks === progress.plannedWorkbooks) {
+        status = "✅ Complete";
+      } else if (progress.completeWorkbooks > 0) {
+        status = "🟡 Partial";
+      }
+
+      lines.push(`Status: ${status}`);
+
+      lines.push("");
+    }
+
+    //
     // Most Impacted Features
     //
 

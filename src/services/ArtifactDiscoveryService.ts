@@ -3,15 +3,20 @@ import * as path from "node:path";
 import { ArtifactSet } from "../models/ArtifactSet";
 
 export class ArtifactDiscoveryService {
-  static findLatest(rootDirectory = "./artifacts/extracted"): ArtifactSet {
+  static findForRun(runDirectory: string): ArtifactSet {
+    const extractedDirectory = path.join(runDirectory, "extracted");
+
     return {
-      cypressPath: path.join(rootDirectory, "cypress"),
+      cypressPath: path.join(extractedDirectory, "cypress"),
 
-      backendUnitPath: path.join(rootDirectory, "backend-unit"),
+      backendUnitPath: path.join(extractedDirectory, "backend-unit"),
 
-      backendIntegrationPath: path.join(rootDirectory, "backend-integration"),
+      backendIntegrationPath: path.join(
+        extractedDirectory,
+        "backend-integration",
+      ),
 
-      frontendPath: path.join(rootDirectory, "frontend"),
+      frontendPath: path.join(extractedDirectory, "frontend"),
     };
   }
 }

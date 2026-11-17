@@ -1,0 +1,38 @@
+{
+  "releaseVersion": "v26.23.1",
+  "releaseDate": "2026-11-17",
+  "githubRunId": "44068727036",
+
+  "manualWorkbooks": [
+    {
+      "id": "EVA-2910",
+      "owner": "Anitha",
+      "required": true
+    },
+    {
+      "id": "EVA-2911",
+      "owner": "Sri",
+      "required": true
+    },
+    {
+      "id": "EVA-2912",
+      "owner": "Shakthi",
+      "required": true
+    },
+    {
+      "id": "bars",
+      "owner": "Roger",
+      "required": true
+    },
+    {
+      "id": "itk3",
+      "owner": "Arsenii",
+      "required": true
+    },
+    {
+      "id": "general-checks",
+      "owner": "Jason",
+      "required": true
+    }
+  ]
+}
