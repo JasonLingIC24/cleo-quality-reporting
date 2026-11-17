@@ -48,9 +48,15 @@ export function buildReleaseRecommendation(
       0,
     ) ?? 0;
 
-  const manualNotExecuted =
+  const manualNotRun =
     report.manualRegression?.reduce(
-      (sum, workbook) => sum + workbook.notExecuted,
+      (sum, workbook) => sum + workbook.notRun,
+      0,
+    ) ?? 0;
+
+  const manualNotApplicable =
+    report.manualRegression?.reduce(
+      (sum, workbook) => sum + workbook.notApplicable,
       0,
     ) ?? 0;
 
@@ -81,23 +87,30 @@ export function buildReleaseRecommendation(
   const manualRuns = report.manualRegression ?? [];
 
   if (manualFailures > 0) {
-    rationale.push(`${manualFailures} Manual Regression failures detected`);
-
+    rationale.push(
+      `${manualFailures} Manual Regression ${pluralise(
+        manualFailures,
+        "failure",
+        "failures",
+      )} detected`,
+    );
     for (const run of manualRuns.filter((r) => r.failed > 0)) {
       rationale.push(
-        `${run.featureId} (${run.featureName}) contains ${run.failed} failed assertions`,
+        `${run.featureName} (${run.featureId}) contains ${
+          run.failed
+        } failed ${pluralise(run.failed, "assertion", "assertions")}`,
       );
     }
   }
 
-  if (manualNotExecuted > 0) {
+  if (manualNotRun > 0) {
     rationale.push(
-      `${manualNotExecuted} Manual Regression assertions remain unexecuted`,
+      `${manualNotRun} Manual Regression assertions await execution`,
     );
 
-    for (const run of manualRuns.filter((r) => r.notExecuted > 0)) {
+    for (const run of manualRuns.filter((r) => r.notRun > 0)) {
       rationale.push(
-        `${run.featureId} (${run.featureName}) has ${run.notExecuted} assertions awaiting execution`,
+        `${run.featureName} (${run.featureId}) has ${run.notRun} assertions awaiting execution`,
       );
     }
   }
@@ -137,7 +150,7 @@ export function buildReleaseRecommendation(
     status = "🔴 Do Not Release";
   } else if (criticalAutomationFailure) {
     status = "🔴 Do Not Release";
-  } else if (manualNotExecuted > 0) {
+  } else if (manualNotRun > 0) {
     status = "🟡 Release With Risk";
   } else if (failureRate > 5) {
     status = "🟡 Release With Risk";
@@ -146,4 +159,8 @@ export function buildReleaseRecommendation(
     status,
     rationale,
   };
+}
+
+function pluralise(count: number, singular: string, plural: string): string {
+  return count === 1 ? singular : plural;
 }

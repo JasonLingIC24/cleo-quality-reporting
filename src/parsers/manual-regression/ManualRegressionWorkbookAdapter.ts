@@ -9,57 +9,45 @@ export class ManualRegressionWorkbookAdapter {
 
     await workbook.xlsx.readFile(workbookPath);
 
-    const summarySheet = workbook.getWorksheet("Execution Summary");
-
-    if (!summarySheet) {
-      throw new Error(`Execution Summary sheet missing: ${workbookPath}`);
-    }
-
     const executionSheet = workbook.worksheets.find(
-      (sheet) => sheet.name !== "_lists" && sheet.name !== "Execution Summary",
+      (sheet) => sheet.name !== "_lists",
     );
 
-    console.log("\n=== EXECUTION SHEET HEADERS ===\n");
-
-    for (let row = 1; row <= 40; row++) {
-      const values: string[] = [];
-
-      for (let col = 1; col <= 10; col++) {
-        values.push(
-          String(executionSheet?.getRow(row).getCell(col).value ?? ""),
-        );
-      }
-
-      const populated = values.some((v) => v.trim() !== "");
-
-      if (populated) {
-        console.log(`Row ${row}:`, values);
-      }
-    }
-
     if (!executionSheet) {
-      throw new Error("Execution sheet missing");
+      throw new Error(`Execution sheet missing: ${workbookPath}`);
     }
 
-    const featureId = executionSheet.name;
+    const featureId =
+      this.getMetadataValue(executionSheet, "Feature ID") ||
+      executionSheet.name;
 
-    const featureName = String(summarySheet.getCell("B4").value ?? "").trim();
+    const featureName = this.getMetadataValue(executionSheet, "Feature");
 
-    const scenarioCount = Number(summarySheet.getCell("B9").value ?? 0);
+    const scenarioCount = Number(
+      this.getMetadataValue(executionSheet, "Scenario Count"),
+    );
 
-    const assertionCount = Number(summarySheet.getCell("B10").value ?? 0);
+    const assertionCount = Number(
+      this.getMetadataValue(executionSheet, "Assertion Count"),
+    );
 
     const passed = this.countStatus(executionSheet, "Pass");
 
     const failed = this.countStatus(executionSheet, "Fail");
 
-    const notExecuted = this.countStatus(executionSheet, "N/A");
+    const notRun = this.countStatus(executionSheet, "Not Run");
+
+    const notApplicable = this.countStatus(executionSheet, "N/A");
 
     const manualTests = this.countEnvironment(executionSheet, "Manual");
 
     const automatedTests = this.countEnvironment(executionSheet, "Cypress");
 
-    const failures = this.extractFailures(executionSheet);
+    const failures = this.extractFailures(
+      executionSheet,
+      featureId,
+      featureName,
+    );
 
     const executed = passed + failed;
 
@@ -68,23 +56,20 @@ export class ManualRegressionWorkbookAdapter {
 
     return {
       featureId,
-
       featureName,
 
       scenarioCount,
-
       assertionCount,
 
       passed,
-
       failed,
 
-      notExecuted,
+      notRun,
+      notApplicable,
 
       passRate,
 
       manualTests,
-
       automatedTests,
 
       failures,
@@ -130,7 +115,47 @@ export class ManualRegressionWorkbookAdapter {
     return count;
   }
 
-  private extractFailures(sheet: ExcelJS.Worksheet): ManualRegressionFailure[] {
+  private countAssertions(sheet: ExcelJS.Worksheet): number {
+    let count = 0;
+
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber <= 11) {
+        return;
+      }
+
+      const testCaseId = String(row.getCell("A").value ?? "").trim();
+
+      if (testCaseId) {
+        count++;
+      }
+    });
+
+    return count;
+  }
+
+  private countUniqueTestCases(sheet: ExcelJS.Worksheet): number {
+    const scenarios = new Set<string>();
+
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber <= 11) {
+        return;
+      }
+
+      const testCaseId = String(row.getCell("A").value ?? "").trim();
+
+      if (testCaseId) {
+        scenarios.add(testCaseId);
+      }
+    });
+
+    return scenarios.size;
+  }
+
+  private extractFailures(
+    sheet: ExcelJS.Worksheet,
+    featureId: string,
+    featureName: string,
+  ): ManualRegressionFailure[] {
     const failures: ManualRegressionFailure[] = [];
 
     sheet.eachRow((row, rowNumber) => {
@@ -145,24 +170,81 @@ export class ManualRegressionWorkbookAdapter {
       }
 
       failures.push({
-        testCaseId: String(row.getCell("A").value ?? "").trim(),
+        featureId,
+        featureName,
 
-        scenario: String(row.getCell("B").value ?? "").trim(),
+        testCaseId: this.cellToString(row.getCell("A").value),
 
-        given: String(row.getCell("C").value ?? "").trim(),
+        scenario: this.cellToString(row.getCell("B").value),
 
-        when: String(row.getCell("D").value ?? "").trim(),
+        given: this.cellToString(row.getCell("C").value),
 
-        then: String(row.getCell("E").value ?? "").trim(),
+        when: this.cellToString(row.getCell("D").value),
 
-        expectedResult: String(row.getCell("E").value ?? "").trim(),
+        then: this.cellToString(row.getCell("E").value),
 
-        notes: String(row.getCell("I").value ?? "").trim(),
+        expectedResult: this.cellToString(row.getCell("E").value),
 
-        evidence: String(row.getCell("J").value ?? "").trim(),
+        notes: this.cellToString(row.getCell("I").value),
+
+        evidence: this.cellToString(row.getCell("J").value),
       });
     });
 
     return failures;
+  }
+
+  private getMetadataValue(sheet: ExcelJS.Worksheet, label: string): string {
+    for (let row = 1; row <= 11; row++) {
+      const key = this.cellToString(sheet.getCell(`A${row}`).value);
+
+      if (key !== label) {
+        continue;
+      }
+
+      const value =
+        this.cellToString(sheet.getCell(`B${row}`).value) ||
+        this.cellToString(sheet.getCell(`C${row}`).value);
+
+      return value;
+    }
+
+    return "";
+  }
+
+  private cellToString(value: unknown): string {
+    if (value == null) {
+      return "";
+    }
+
+    if (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean"
+    ) {
+      return String(value).trim();
+    }
+
+    if (typeof value === "object" && value !== null && "text" in value) {
+      return String(value.text).trim();
+    }
+
+    if (typeof value === "object" && value !== null && "result" in value) {
+      return String(value.result ?? "").trim();
+    }
+
+    if (
+      typeof value === "object" &&
+      value !== null &&
+      "richText" in value &&
+      Array.isArray(value.richText)
+    ) {
+      return value.richText
+        .map((part: { text?: string }) => part.text ?? "")
+        .join("")
+        .trim();
+    }
+
+    return String(value).trim();
   }
 }

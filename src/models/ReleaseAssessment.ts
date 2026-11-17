@@ -2,20 +2,16 @@ import { ReleaseRecommendation } from "../reports/management/buildReleaseRecomme
 
 export interface ReleaseAssessment {
   totalTests: number;
-
   passed: number;
-
   failed: number;
-
   skipped: number;
 
   passRate: number;
-
   failureRate: number;
 
   manualFailures: number;
-
-  manualNotExecuted: number;
+  manualNotRun: number;
+  manualNotApplicable: number;
 
   recommendation: ReleaseRecommendation;
 }

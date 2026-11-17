@@ -31,9 +31,15 @@ export class ReleaseAssessmentFactory {
         0,
       ) ?? 0;
 
-    const manualNotExecuted =
+    const manualNotRun =
       report.manualRegression?.reduce(
-        (sum, workbook) => sum + workbook.notExecuted,
+        (sum, workbook) => sum + workbook.notRun,
+        0,
+      ) ?? 0;
+
+    const manualNotApplicable =
+      report.manualRegression?.reduce(
+        (sum, workbook) => sum + workbook.notApplicable,
         0,
       ) ?? 0;
 
@@ -52,7 +58,9 @@ export class ReleaseAssessmentFactory {
 
       manualFailures,
 
-      manualNotExecuted,
+      manualNotRun,
+
+      manualNotApplicable,
 
       recommendation: buildReleaseRecommendation(report),
     };

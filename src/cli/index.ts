@@ -16,8 +16,6 @@ async function main() {
 
   const artifacts = ArtifactDiscoveryService.findLatest();
 
-  console.log(artifacts);
-
   const parser = new MochawesomeParser();
 
   const run = await parser.parse(
@@ -50,10 +48,6 @@ async function main() {
     frontendCoverage,
     manualRegression,
   );
-
-  console.log("Release Assessment");
-
-  console.log(JSON.stringify(qualityReport.assessment, null, 2));
 
   const managementGenerator = new ManagementReportGenerator();
 

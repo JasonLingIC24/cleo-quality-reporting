@@ -1,12 +1,12 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+
 import { QualityReport } from "../../models/QualityReport";
-import { buildFailureSummary } from "./buildFailureSummary";
+
 import { buildFeatureSummary } from "./buildFeatureSummary";
 import { buildExecutiveSummary } from "./buildExecutiveSummary";
 import { buildCandidateDefects } from "./buildCandidateDefects";
 import { buildBackendIntegrationSummary } from "./buildBackendIntegrationSummary";
-import { buildManualRegressionIssues } from "./buildManualRegressionIssues";
 
 export class ManagementReportGenerator {
   async generate(
@@ -26,8 +26,6 @@ export class ManagementReportGenerator {
 
     const assessment = report.assessment!;
 
-    const failureSummary = buildFailureSummary(cypress.failedTests);
-
     const featureSummary = buildFeatureSummary(cypress.failedTests);
 
     const executiveSummary = buildExecutiveSummary(cypress.failedTests);
@@ -35,10 +33,6 @@ export class ManagementReportGenerator {
     const releaseRecommendation = assessment.recommendation;
 
     const candidateDefects = buildCandidateDefects(cypress.failedTests);
-
-    const manualIssues = buildManualRegressionIssues(
-      report.manualRegression ?? [],
-    );
 
     const lines: string[] = [];
 
@@ -85,6 +79,10 @@ export class ManagementReportGenerator {
 
     lines.push("");
 
+    //
+    // Release Recommendation
+    //
+
     lines.push("## Release Recommendation");
 
     lines.push("");
@@ -104,10 +102,34 @@ export class ManagementReportGenerator {
     lines.push("");
 
     //
-    // Test Summary
+    // Most Impacted Features
     //
 
-    lines.push("## Summary");
+    lines.push("## Most Impacted Features");
+
+    lines.push("");
+
+    lines.push("| Feature | Count |");
+
+    lines.push("|---------|------:|");
+
+    const topFeatures = featureSummary.slice(0, 10);
+
+    for (const feature of topFeatures) {
+      lines.push(`| ${feature.feature} | ${feature.count} |`);
+    }
+
+    lines.push("");
+
+    lines.push(`*Showing ${topFeatures.length} most impacted features*`);
+
+    lines.push("");
+
+    //
+    // Quality Metrics
+    //
+
+    lines.push("## Quality Metrics");
 
     lines.push("");
 
@@ -116,7 +138,8 @@ export class ManagementReportGenerator {
     lines.push("");
 
     lines.push("| Suite | Total | Passed | Failed | Skipped |");
-    lines.push("|-------|-------|--------|--------|---------|");
+
+    lines.push("|-------|------:|-------:|-------:|--------:|");
 
     lines.push(
       `| Cypress | ${cypress.totalTests} | ${cypress.passed} | ${cypress.failed} | ${cypress.skipped} |`,
@@ -146,22 +169,9 @@ export class ManagementReportGenerator {
 
     lines.push("");
 
-    lines.push("## Frontend Coverage");
-
-    lines.push("");
-
-    lines.push("| Metric | Coverage |");
-    lines.push("|--------|----------|");
-
-    lines.push(`| Lines | ${frontendCoverage.lines}% |`);
-
-    lines.push(`| Statements | ${frontendCoverage.statements}% |`);
-
-    lines.push(`| Functions | ${frontendCoverage.functions}% |`);
-
-    lines.push(`| Branches | ${frontendCoverage.branches}% |`);
-
-    lines.push("");
+    //
+    // Backend Integration Failures
+    //
 
     if (backendIntegration.failures?.length) {
       const backendSummary = buildBackendIntegrationSummary(
@@ -181,18 +191,26 @@ export class ManagementReportGenerator {
       lines.push("");
     }
 
+    //
+    // Manual Regression
+    //
+
     if (report.manualRegression && report.manualRegression.length > 0) {
       lines.push("## Manual Regression");
 
       lines.push("");
 
-      lines.push("| Feature | Scenarios | Assertions | Pass | Fail | N/A |");
+      lines.push(
+        "| Feature | ID | Scenarios | Assertions | Pass | Fail | Not Run | N/A |",
+      );
 
-      lines.push("|---------|-----------|------------|------|------|-----|");
+      lines.push(
+        "|---------|----|----------:|-----------:|-----:|-----:|--------:|----:|",
+      );
 
       for (const workbook of report.manualRegression) {
         lines.push(
-          `| ${workbook.featureId} | ${workbook.scenarioCount} | ${workbook.assertionCount} | ${workbook.passed} | ${workbook.failed} | ${workbook.notExecuted} |`,
+          `| ${workbook.featureName} | ${workbook.featureId} | ${workbook.scenarioCount} | ${workbook.assertionCount} | ${workbook.passed} | ${workbook.failed} | ${workbook.notRun} | ${workbook.notApplicable} |`,
         );
       }
 
@@ -213,8 +231,13 @@ export class ManagementReportGenerator {
         0,
       );
 
-      const totalNotExecuted = report.manualRegression.reduce(
-        (sum, workbook) => sum + workbook.notExecuted,
+      const totalNotRun = report.manualRegression.reduce(
+        (sum, workbook) => sum + workbook.notRun,
+        0,
+      );
+
+      const totalNotApplicable = report.manualRegression.reduce(
+        (sum, workbook) => sum + workbook.notApplicable,
         0,
       );
 
@@ -230,90 +253,109 @@ export class ManagementReportGenerator {
 
       lines.push(`- Failed: ${totalFailed}`);
 
-      lines.push(`- Not Executed: ${totalNotExecuted}`);
+      lines.push(`- Not Run: ${totalNotRun}`);
 
-      lines.push("");
-    }
+      lines.push(`- N/A: ${totalNotApplicable}`);
 
-    for (const workbook of report.manualRegression ?? []) {
-      if (workbook.failures.length === 0) {
-        continue;
-      }
-
-      lines.push(`### ${workbook.featureId} Failures`);
-
-      lines.push("");
-
-      for (const failure of workbook.failures) {
-        lines.push(`- ${failure.testCaseId}`);
-
-        lines.push(`  - ${failure.scenario}`);
+      if (totalFailed > 0) {
+        lines.push("- Status: 🔴 Manual Failures Present");
+      } else if (totalNotRun > 0) {
+        lines.push("- Status: 🟡 Execution Incomplete");
+      } else {
+        lines.push("- Status: ✅ Complete");
       }
 
       lines.push("");
     }
 
     //
-    // Failure Categories
+    // Manual Regression Issues
     //
 
-    lines.push("## Failure Categories");
-
-    lines.push("");
-
-    lines.push("| Category | Count |");
-
-    lines.push("|----------|-------|");
-    const majorCategories = failureSummary.filter(
-      (category) => category.count > 5,
+    const workbooksWithFailures = (report.manualRegression ?? []).filter(
+      (workbook) => workbook.failures.length > 0,
     );
 
-    const minorCategories = failureSummary.filter(
-      (category) => category.count <= 5,
-    );
+    if (workbooksWithFailures.length > 0) {
+      const totalManualFailures = workbooksWithFailures.reduce(
+        (sum, workbook) => sum + workbook.failures.length,
+        0,
+      );
 
-    for (const category of majorCategories) {
-      lines.push(`| ${category.category} | ${category.count} |`);
-    }
-
-    lines.push("");
-
-    lines.push(`*Showing categories with more than 5 failures*`);
-
-    lines.push("");
-
-    if (minorCategories.length > 0) {
-      lines.push("Other categories:");
+      lines.push("## Manual Regression Issues");
 
       lines.push("");
 
-      for (const category of minorCategories) {
-        lines.push(`- ${category.category} (${category.count})`);
+      lines.push(`Total Failed Assertions: ${totalManualFailures}`);
+
+      lines.push("");
+
+      for (const workbook of workbooksWithFailures) {
+        lines.push(`### ${workbook.featureName} (${workbook.featureId})`);
+
+        lines.push("");
+
+        lines.push(`Failed Assertions: ${workbook.failures.length}`);
+
+        lines.push("");
+
+        for (const failure of workbook.failures) {
+          lines.push(`#### ${failure.testCaseId} ${failure.scenario}`);
+
+          lines.push("");
+
+          lines.push("Expected Result");
+
+          lines.push("");
+
+          lines.push(
+            `- ${this.cleanExpectedResult(failure.then || "Not provided")}`,
+          );
+
+          lines.push("");
+
+          if (failure.notes) {
+            lines.push("Notes");
+
+            lines.push("");
+
+            lines.push(`- ${failure.notes}`);
+
+            lines.push("");
+          }
+
+          if (failure.evidence) {
+            lines.push("Evidence");
+
+            lines.push("");
+
+            lines.push(`- ${failure.evidence}`);
+
+            lines.push("");
+          }
+        }
       }
     }
 
-    lines.push("");
-
     //
-    // Top Impacted Features
+    // Frontend Coverage
     //
 
-    lines.push("## Top Impacted Features");
+    lines.push("## Frontend Coverage");
 
     lines.push("");
 
-    lines.push("| Feature | Count |");
+    lines.push("| Metric | Coverage |");
 
-    lines.push("|---------|-------|");
+    lines.push("|--------|---------:|");
 
-    const topFeatures = featureSummary.slice(0, 10);
+    lines.push(`| Lines | ${frontendCoverage.lines}% |`);
 
-    for (const feature of topFeatures) {
-      lines.push(`| ${feature.feature} | ${feature.count} |`);
-    }
-    lines.push("");
+    lines.push(`| Statements | ${frontendCoverage.statements}% |`);
 
-    lines.push(`*Showing top ${topFeatures.length} impacted features*`);
+    lines.push(`| Functions | ${frontendCoverage.functions}% |`);
+
+    lines.push(`| Branches | ${frontendCoverage.branches}% |`);
 
     lines.push("");
 
@@ -324,6 +366,10 @@ export class ManagementReportGenerator {
     lines.push("## Key Issues");
 
     lines.push("");
+
+    const manualKeyIssues = this.buildManualRegressionKeyIssues(report);
+
+    lines.push(...manualKeyIssues);
 
     for (const defect of candidateDefects.slice(0, 10)) {
       lines.push(`### ${defect.title}`);
@@ -373,24 +419,6 @@ export class ManagementReportGenerator {
       lines.push("");
     }
 
-    if (manualIssues.length > 0) {
-      lines.push("");
-
-      lines.push("### Manual Regression Issues");
-
-      lines.push("");
-
-      for (const issue of manualIssues) {
-        lines.push(`- ${issue.featureId}`);
-
-        lines.push(`  - Feature: ${issue.featureName}`);
-
-        lines.push(`  - Failed Assertions: ${issue.failedAssertions}`);
-      }
-
-      lines.push("");
-    }
-
     lines.push("Generated by cleo-quality-reporting v1.0.0");
 
     fs.writeFileSync(
@@ -411,5 +439,41 @@ export class ManagementReportGenerator {
       minute: "2-digit",
       timeZone: "UTC",
     });
+  }
+
+  private cleanExpectedResult(value: string): string {
+    return value.replace(/^(THEN|AND)\s+/i, "");
+  }
+
+  private buildManualRegressionKeyIssues(report: QualityReport): string[] {
+    const lines: string[] = [];
+
+    const failedWorkbooks = (report.manualRegression ?? []).filter(
+      (workbook) => workbook.failed > 0,
+    );
+
+    for (const workbook of failedWorkbooks) {
+      lines.push(`### ${workbook.featureName} (${workbook.featureId})`);
+
+      lines.push("");
+
+      lines.push("- Category: Manual Regression");
+
+      lines.push(`- Failed Assertions: ${workbook.failed}`);
+
+      lines.push("");
+
+      lines.push(
+        "See Manual Regression Issues for failed test details, notes and supporting evidence.",
+      );
+
+      lines.push("");
+
+      lines.push("---");
+
+      lines.push("");
+    }
+
+    return lines;
   }
 }
