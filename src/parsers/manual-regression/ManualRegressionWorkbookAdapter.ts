@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-
+import * as path from "node:path";
 import { ManualRegressionRun } from "../../models/ManualRegressionRun";
 import { ManualRegressionFailure } from "../../models/ManualRegressionFailure";
 
@@ -17,19 +17,29 @@ export class ManualRegressionWorkbookAdapter {
       throw new Error(`Execution sheet missing: ${workbookPath}`);
     }
 
+    const workbookId = path.basename(workbookPath, ".xlsx");
+
     const featureId =
       this.getMetadataValue(executionSheet, "Feature ID") ||
       executionSheet.name;
 
     const featureName = this.getMetadataValue(executionSheet, "Feature");
 
-    const scenarioCount = Number(
+    const scenarioCountRaw = Number(
       this.getMetadataValue(executionSheet, "Scenario Count"),
     );
 
-    const assertionCount = Number(
+    const scenarioCount = Number.isFinite(scenarioCountRaw)
+      ? scenarioCountRaw
+      : 0;
+
+    const assertionCountRaw = Number(
       this.getMetadataValue(executionSheet, "Assertion Count"),
     );
+
+    const assertionCount = Number.isFinite(assertionCountRaw)
+      ? assertionCountRaw
+      : this.countAssertions(executionSheet);
 
     const passed = this.countStatus(executionSheet, "Pass");
 
@@ -55,6 +65,8 @@ export class ManualRegressionWorkbookAdapter {
       executed > 0 ? Number(((passed / executed) * 100).toFixed(2)) : 0;
 
     return {
+      workbookId,
+
       featureId,
       featureName,
 

@@ -150,6 +150,8 @@ export class ManagementReportGenerator {
 
       lines.push(`- Complete: ${progress.completeWorkbooks}`);
 
+      lines.push(`- Ready: ${progress.readyWorkbooks}`);
+
       lines.push(`- In Progress: ${progress.inProgressWorkbooks}`);
 
       lines.push(`- Not Started: ${progress.notStartedWorkbooks}`);
@@ -158,15 +160,70 @@ export class ManagementReportGenerator {
 
       lines.push("");
 
-      let status = "🔴 In Progress";
+      let status = "⚪ Not Started";
 
       if (progress.completeWorkbooks === progress.plannedWorkbooks) {
         status = "✅ Complete";
-      } else if (progress.completeWorkbooks > 0) {
-        status = "🟡 Partial";
+      } else if (progress.inProgressWorkbooks > 0) {
+        status = "🟡 In Progress";
+      } else if (progress.readyWorkbooks > 0) {
+        status = "🔵 Ready";
+      } else if (progress.notStartedWorkbooks > 0) {
+        status = "⚪ Not Started";
       }
 
       lines.push(`Status: ${status}`);
+
+      lines.push("");
+    }
+
+    //
+    // Workbook Status
+    //
+
+    lines.push("### Workbook Status");
+
+    lines.push("");
+
+    lines.push("| Workbook | Owner | Status |");
+
+    lines.push("|----------|-------|--------|");
+
+    for (const workbook of report.workbookStatuses ?? []) {
+      const status =
+        workbook.status === "COMPLETE"
+          ? "✅ Complete"
+          : workbook.status === "IN_PROGRESS"
+            ? "🟡 In Progress"
+            : workbook.status === "READY"
+              ? "🔵 Ready"
+              : "⚪ Not Started";
+
+      lines.push(
+        `| ${workbook.workbookId} | ${workbook.owner ?? "Unassigned"} | ${status} |`,
+      );
+    }
+
+    lines.push("");
+
+    //
+    // Owner Progress
+    //
+
+    if (report.ownerProgress?.length) {
+      lines.push("### Owner Progress");
+
+      lines.push("");
+
+      lines.push("| Owner | Complete | Ready | In Progress | Not Started |");
+
+      lines.push("|-------|---------:|------:|------------:|------------:|");
+
+      for (const owner of report.ownerProgress) {
+        lines.push(
+          `| ${owner.owner} | ${owner.complete} | ${owner.ready} | ${owner.inProgress} | ${owner.notStarted} |`,
+        );
+      }
 
       lines.push("");
     }

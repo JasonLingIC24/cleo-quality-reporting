@@ -14,6 +14,8 @@ import { ManualRegressionWorkbookAdapter } from "../parsers/manual-regression/Ma
 import { ReleaseTestPlanAdapter } from "../adapters/ReleaseTestPlanAdapter";
 import { GitHubArtifactDownloader } from "../github/GitHubArtifactDownloader";
 import { TestPlanProgressCalculator } from "../services/TestPlanProgressCalculator";
+import { WorkbookStatusCalculator } from "../services/WorkbookStatusCalculator";
+import { OwnerProgressCalculator } from "../services/OwnerProgressCalculator";
 
 async function main() {
   //
@@ -23,10 +25,6 @@ async function main() {
   const releaseTestPlan = ReleaseTestPlanAdapter.load(
     "./release-plans/release-test-plan-v26.23.1.json",
   );
-
-  console.log("Release Test Plan");
-
-  console.log(JSON.stringify(releaseTestPlan, null, 2));
 
   //
   // Download GitHub Artifacts
@@ -87,7 +85,8 @@ async function main() {
   // Parse Manual Regression Workbooks
   //
 
-  const workbookPaths = ManualWorkbookDiscoveryService.findAll();
+  const workbookPaths =
+    ManualWorkbookDiscoveryService.findForReleasePlan(releaseTestPlan);
 
   const manualAdapter = new ManualRegressionWorkbookAdapter();
 
@@ -104,9 +103,19 @@ async function main() {
     manualRegression,
   );
 
-  console.log("Test Plan Progress");
+  //
+  // Calculate Workbook Statuses
+  //
 
-  console.log(JSON.stringify(testPlanProgress, null, 2));
+  const workbookStatuses = WorkbookStatusCalculator.calculate(
+    releaseTestPlan,
+    manualRegression,
+  );
+
+  //
+  // Calculate Owner Progress
+  //
+  const ownerProgress = OwnerProgressCalculator.calculate(workbookStatuses);
 
   //
   // Build Quality Report
@@ -120,6 +129,8 @@ async function main() {
     manualRegression,
     releaseTestPlan,
     testPlanProgress,
+    workbookStatuses,
+    ownerProgress,
   );
 
   //

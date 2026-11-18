@@ -5,6 +5,8 @@ import { ReleaseAssessment } from "./ReleaseAssessment";
 import { ManualRegressionRun } from "./ManualRegressionRun";
 import { ReleaseTestPlan } from "./ReleaseTestPlan";
 import { TestPlanProgress } from "./TestPlanProgress";
+import { WorkbookStatus } from "./WorkbookStatus";
+import { OwnerProgress } from "./OwnerProgress";
 
 export interface QualityReport {
   executionDate: string;
@@ -24,4 +26,8 @@ export interface QualityReport {
   assessment?: ReleaseAssessment;
 
   testPlanProgress?: TestPlanProgress;
+
+  workbookStatuses?: WorkbookStatus[];
+
+  ownerProgress?: OwnerProgress[];
 }

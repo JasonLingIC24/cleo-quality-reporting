@@ -3,6 +3,8 @@ export interface TestPlanProgress {
 
   completeWorkbooks: number;
 
+  readyWorkbooks: number;
+
   inProgressWorkbooks: number;
 
   notStartedWorkbooks: number;

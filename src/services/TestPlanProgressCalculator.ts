@@ -1,53 +1,31 @@
 import { ReleaseTestPlan } from "../models/ReleaseTestPlan";
 import { ManualRegressionRun } from "../models/ManualRegressionRun";
 import { TestPlanProgress } from "../models/TestPlanProgress";
+import { WorkbookStatusCalculator } from "./WorkbookStatusCalculator";
+import { WorkbookStatusType } from "../models/WorkbookStatus";
 
 export class TestPlanProgressCalculator {
   static calculate(
     releaseTestPlan: ReleaseTestPlan,
     manualRegression: ManualRegressionRun[],
   ): TestPlanProgress {
-    const plannedWorkbooks = releaseTestPlan.manualWorkbooks.length;
+    const workbookStatuses = WorkbookStatusCalculator.calculate(
+      releaseTestPlan,
+      manualRegression,
+    );
 
-    let completeWorkbooks = 0;
-    let inProgressWorkbooks = 0;
-    let notStartedWorkbooks = 0;
+    const countStatus = (status: WorkbookStatusType): number =>
+      workbookStatuses.filter((workbook) => workbook.status === status).length;
 
-    for (const plannedWorkbook of releaseTestPlan.manualWorkbooks) {
-      const workbook = manualRegression.find(
-        (run) =>
-          run.featureId.toLowerCase() === plannedWorkbook.id.toLowerCase(),
-      );
+    const plannedWorkbooks = workbookStatuses.length;
 
-      if (!workbook) {
-        notStartedWorkbooks++;
+    const completeWorkbooks = countStatus("COMPLETE");
 
-        continue;
-      }
+    const readyWorkbooks = countStatus("READY");
 
-      //
-      // COMPLETE
-      //
-      if (workbook.notRun === 0) {
-        completeWorkbooks++;
+    const inProgressWorkbooks = countStatus("IN_PROGRESS");
 
-        continue;
-      }
-
-      //
-      // IN PROGRESS
-      //
-      if (workbook.passed + workbook.failed > 0 && workbook.notRun > 0) {
-        inProgressWorkbooks++;
-
-        continue;
-      }
-
-      //
-      // NOT STARTED
-      //
-      notStartedWorkbooks++;
-    }
+    const notStartedWorkbooks = countStatus("NOT_STARTED");
 
     const completionPercentage =
       plannedWorkbooks > 0
@@ -56,9 +34,15 @@ export class TestPlanProgressCalculator {
 
     return {
       plannedWorkbooks,
+
       completeWorkbooks,
+
+      readyWorkbooks,
+
       inProgressWorkbooks,
+
       notStartedWorkbooks,
+
       completionPercentage,
     };
   }

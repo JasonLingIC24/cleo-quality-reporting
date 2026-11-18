@@ -1,6 +1,8 @@
 import { ManualRegressionFailure } from "./ManualRegressionFailure";
 
 export interface ManualRegressionRun {
+  workbookId: string;
+
   featureId: string;
   featureName: string;
 
