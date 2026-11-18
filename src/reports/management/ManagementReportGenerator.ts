@@ -124,12 +124,23 @@ export class ManagementReportGenerator {
 
       lines.push("");
 
-      lines.push("| Workbook | Owner |");
+      lines.push("| Workbook | Owner | Status |");
 
-      lines.push("|----------|-------|");
+      lines.push("|----------|-------|--------|");
 
-      for (const workbook of report.releaseTestPlan.manualWorkbooks) {
-        lines.push(`| ${workbook.id} | ${workbook.owner ?? "Unassigned"} |`);
+      for (const workbook of report.workbookStatuses ?? []) {
+        const status =
+          workbook.status === "COMPLETE"
+            ? "✅ Complete"
+            : workbook.status === "IN_PROGRESS"
+              ? "🟡 In Progress"
+              : workbook.status === "READY"
+                ? "🔵 Ready"
+                : "⚪ Not Started";
+
+        lines.push(
+          `| ${workbook.workbookId} | ${workbook.owner ?? "Unassigned"} | ${status} |`,
+        );
       }
 
       lines.push("");
@@ -172,36 +183,9 @@ export class ManagementReportGenerator {
         status = "⚪ Not Started";
       }
 
-      lines.push(`Status: ${status}`);
+      lines.push(`Overall Status: ${status}`);
 
       lines.push("");
-    }
-
-    //
-    // Workbook Status
-    //
-
-    lines.push("### Workbook Status");
-
-    lines.push("");
-
-    lines.push("| Workbook | Owner | Status |");
-
-    lines.push("|----------|-------|--------|");
-
-    for (const workbook of report.workbookStatuses ?? []) {
-      const status =
-        workbook.status === "COMPLETE"
-          ? "✅ Complete"
-          : workbook.status === "IN_PROGRESS"
-            ? "🟡 In Progress"
-            : workbook.status === "READY"
-              ? "🔵 Ready"
-              : "⚪ Not Started";
-
-      lines.push(
-        `| ${workbook.workbookId} | ${workbook.owner ?? "Unassigned"} | ${status} |`,
-      );
     }
 
     lines.push("");
