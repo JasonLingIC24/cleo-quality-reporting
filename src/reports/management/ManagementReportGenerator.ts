@@ -40,7 +40,7 @@ export class ManagementReportGenerator {
     // Header
     //
 
-    lines.push("# Nightly Regression Report");
+    lines.push("# Release Readiness Report");
 
     lines.push("");
     lines.push(`Report Generated: ${this.formatDate(reportDate)} UTC`);

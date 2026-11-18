@@ -26,6 +26,101 @@ export class GitHubArtifactDownloader {
     }
   }
 
+  async downloadArtifactsForWorkflow(workflowFile: string): Promise<string> {
+    const runId = await this.getLatestWorkflowRun(workflowFile);
+
+    if (this.isRunCached(runId)) {
+      console.log(`Using cached artifacts for run ${runId}`);
+
+      return this.getRunDirectory(runId);
+    }
+
+    console.log(`Using workflow ${workflowFile}`);
+
+    const artifacts = await this.listArtifacts(runId);
+
+    for (const artifact of artifacts) {
+      await this.downloadArtifact(runId, artifact);
+    }
+
+    return this.getRunDirectory(runId);
+  }
+
+  async downloadArtifactsForRun(runId: string): Promise<string> {
+    if (this.isRunCached(runId)) {
+      console.log(`Using cached artifacts for run ${runId}`);
+
+      return this.getRunDirectory(runId);
+    }
+
+    const artifacts = await this.listArtifacts(runId);
+
+    for (const artifact of artifacts) {
+      await this.downloadArtifact(runId, artifact);
+    }
+
+    return this.getRunDirectory(runId);
+  }
+
+  private async getLatestWorkflowRun(workflowFile: string): Promise<string> {
+    console.log(`Querying workflow ${workflowFile}`);
+
+    const response = await fetch(
+      `https://api.github.com/repos/${GitHubConfig.owner}/${GitHubConfig.repo}/actions/workflows/${workflowFile}/runs?status=success&per_page=1`,
+      {
+        headers: {
+          Authorization: `Bearer ${GitHubConfig.token}`,
+          Accept: "application/vnd.github+json",
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to find workflow runs: ${response.status}`);
+    }
+
+    const payload = await response.json();
+    console.log(`Total runs returned: ${payload.total_count}`);
+
+    for (const run of payload.workflow_runs ?? []) {
+      console.log(
+        [run.id, run.name, run.status, run.conclusion, run.created_at].join(
+          " | ",
+        ),
+      );
+    }
+
+    const run = payload.workflow_runs?.[0];
+
+    console.log(JSON.stringify(payload.total_count));
+
+    if (!run) {
+      throw new Error(`No successful runs found for ${workflowFile}`);
+    }
+
+    console.log(`Latest workflow run: ${run.id}`);
+
+    return String(run.id);
+  }
+
+  async listWorkflows(): Promise<void> {
+    const response = await fetch(
+      `https://api.github.com/repos/${GitHubConfig.owner}/${GitHubConfig.repo}/actions/workflows`,
+      {
+        headers: {
+          Authorization: `Bearer ${GitHubConfig.token}`,
+          Accept: "application/vnd.github+json",
+        },
+      },
+    );
+
+    const payload = await response.json();
+
+    for (const workflow of payload.workflows) {
+      console.log(workflow.id, workflow.name, workflow.path);
+    }
+  }
+
   private async listArtifacts(runId: string): Promise<GitHubArtifact[]> {
     const response = await fetch(
       `https://api.github.com/repos/${GitHubConfig.owner}/${GitHubConfig.repo}/actions/runs/${runId}/artifacts`,

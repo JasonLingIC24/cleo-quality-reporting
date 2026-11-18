@@ -4,9 +4,8 @@
   "description": "Quality reporting and analysis for:",
   "main": "index.js",
   "scripts": {
-    "analyse-results": "tsx cli/analyse-mochawesome.ts",
-    "generate-report": "tsx cli/generate-markdown-report.ts",
-    "start": "tsx src/cli/index.ts",
+    "release-report": "tsx src/cli/release-report.ts",
+    "nightly-report": "tsx src/cli/nightly-report.ts",
     "build": "tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

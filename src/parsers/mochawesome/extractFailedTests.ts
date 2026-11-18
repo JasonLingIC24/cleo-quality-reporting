@@ -80,9 +80,15 @@ function extractTestCaseId(title: string): string {
 }
 
 function extractFeature(fullTitle: string): string {
-  const match = fullTitle.match(/Feature:\s*(.*?)\s+GIVEN/i);
+  const match = fullTitle.match(/^Feature:\s*(.*?)\s+(?:GIVEN|WHEN)/i);
 
-  return match?.[1] ?? "Unknown";
+  if (!match) {
+    return "Unknown";
+  }
+
+  const feature = match[1].replace(/\s+[A-Z][A-Z\s-]{5,}$/, "").trim();
+
+  return feature;
 }
 
 function extractHook(errorMessage: string): string {
@@ -214,6 +220,10 @@ function extractRootCause(errorMessage: string): string {
 
   if (message.includes("deep equal")) {
     return "Assertion Failure";
+  }
+
+  if (message.includes("to have property")) {
+    return "Missing Response Property";
   }
 
   // Network

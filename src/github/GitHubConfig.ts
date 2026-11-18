@@ -1,7 +1,10 @@
-export const GitHubConfig = {
-  owner: process.env.GITHUB_OWNER ?? "",
+export class GitHubConfig {
+  static readonly owner = process.env.GITHUB_OWNER!;
 
-  repo: process.env.GITHUB_REPO ?? "",
+  static readonly repo = process.env.GITHUB_REPO!;
 
-  token: process.env.GITHUB_TOKEN ?? "",
-};
+  static readonly token = process.env.GITHUB_TOKEN!;
+
+  static readonly nightlyWorkflowId =
+    process.env.GITHUB_NIGHTLY_WORKFLOW ?? "call_test-cypress.yml";
+}
