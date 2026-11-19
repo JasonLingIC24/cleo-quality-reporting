@@ -3,6 +3,8 @@ export interface ConfluencePage {
 
   title: string;
 
+  spaceId?: string;
+
   version: {
     number: number;
   };

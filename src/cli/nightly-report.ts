@@ -7,6 +7,7 @@ import { ArtifactPaths } from "../services/ArtifactPaths";
 import { MochawesomeParser } from "../parsers/mochawesome/MochawesomeParser";
 import { FailureInvestigationReportGenerator } from "../reports/failure-investigation/FailureInvestigationReportGenerator";
 import { ConfluencePagePublisher } from "../confluence/ConfluencePagePublisher";
+import { ConfluencePageIds } from "../confluence/ConfluencePageIds";
 
 async function main() {
   //
@@ -52,6 +53,12 @@ async function main() {
 
   await publisher.publishMarkdown(
     "Nightly Failure Investigation",
+    "./reports/failure-investigation/index.md",
+  );
+
+  await publisher.publishHistoricalMarkdown(
+    `Nightly Failure Investigation - ${new Date().toISOString().slice(0, 10)}`,
+    ConfluencePageIds.nightlyParentPageId,
     "./reports/failure-investigation/index.md",
   );
 }

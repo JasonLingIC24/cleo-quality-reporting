@@ -61,6 +61,7 @@ export class ConfluenceClient {
     return {
       id: page.id,
       title: page.title,
+      spaceId: page.spaceId,
       version: {
         number: page.version?.number ?? 1,
       },
@@ -104,5 +105,42 @@ export class ConfluenceClient {
     }
 
     console.log(`Updated Confluence page: ${title}`);
+  }
+
+  async createPage(
+    title: string,
+    parentPageId: string,
+    spaceId: string,
+    content: string,
+  ): Promise<void> {
+    const response = await fetch(
+      `${ConfluenceConfig.baseUrl}/wiki/api/v2/pages`,
+      {
+        method: "POST",
+        headers: this.buildHeaders(),
+        body: JSON.stringify({
+          title,
+          parentId: parentPageId,
+          spaceId,
+          status: "current",
+          body: {
+            representation: "storage",
+            value: content,
+          },
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      const body = await response.text();
+
+      throw new Error(
+        ["Failed to create page", `Status: ${response.status}`, body].join(
+          "\n",
+        ),
+      );
+    }
+
+    console.log(`Created page: ${title}`);
   }
 }
