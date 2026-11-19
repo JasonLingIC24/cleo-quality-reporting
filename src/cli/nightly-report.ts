@@ -1,6 +1,5 @@
 import "dotenv/config";
-
-import { GitHubConfig } from "../github/GitHubConfig";
+import { getRunId } from "./getRunId";
 import { GitHubArtifactDownloader } from "../github/GitHubArtifactDownloader";
 import { ArtifactExtractor } from "../github/ArtifactExtractor";
 
@@ -15,9 +14,10 @@ async function main() {
   //
   // Download Nightly Artifacts
   //
-  const downloader = new GitHubArtifactDownloader();
 
-  const runId = process.env.NIGHTLY_RUN_ID!;
+  const runId = getRunId();
+
+  const downloader = new GitHubArtifactDownloader();
 
   const runDirectory = await downloader.downloadArtifactsForRun(runId);
 

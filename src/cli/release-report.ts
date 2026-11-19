@@ -1,5 +1,5 @@
 import "dotenv/config";
-
+import { getRunId } from "./getRunId";
 import { MochawesomeParser } from "../parsers/mochawesome/MochawesomeParser";
 import { ArtifactDiscoveryService } from "../services/ArtifactDiscoveryService";
 import { ArtifactPaths } from "../services/ArtifactPaths";
@@ -25,6 +25,8 @@ async function main() {
   const releaseTestPlan = ReleaseTestPlanAdapter.load(
     "./release-plans/release-test-plan-v26.23.1.json",
   );
+
+  const runId = getRunId(releaseTestPlan.githubRunId);
 
   //
   // Download GitHub Artifacts
