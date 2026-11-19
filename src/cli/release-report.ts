@@ -17,6 +17,7 @@ import { TestPlanProgressCalculator } from "../services/TestPlanProgressCalculat
 import { WorkbookStatusCalculator } from "../services/WorkbookStatusCalculator";
 import { OwnerProgressCalculator } from "../services/OwnerProgressCalculator";
 import { ConfluencePagePublisher } from "../confluence/ConfluencePagePublisher";
+import { ConfluencePageIds } from "../confluence/ConfluencePageIds";
 
 async function main() {
   //
@@ -150,6 +151,12 @@ async function main() {
 
   await publisher.publishMarkdown(
     "Release Readiness Report",
+    "./reports/management/regression-summary.md",
+  );
+
+  await publisher.publishHistoricalMarkdown(
+    `Release Readiness Report - ${releaseTestPlan.releaseVersion}`,
+    ConfluencePageIds.releaseParentPageId,
     "./reports/management/regression-summary.md",
   );
 }
