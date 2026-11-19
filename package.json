@@ -6,6 +6,7 @@
   "scripts": {
     "release-report": "tsx src/cli/release-report.ts",
     "nightly-report": "tsx src/cli/nightly-report.ts",
+    "test-confluence": "tsx src/cli/test-confluence.ts",
     "build": "tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
@@ -18,6 +19,7 @@
     "adm-zip": "^0.6.1",
     "dotenv": "^18.0.10",
     "exceljs": "^4.4.0",
+    "marked": "^18.2.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   },

@@ -2,13 +2,11 @@ import "dotenv/config";
 import { getRunId } from "./getRunId";
 import { GitHubArtifactDownloader } from "../github/GitHubArtifactDownloader";
 import { ArtifactExtractor } from "../github/ArtifactExtractor";
-
 import { ArtifactDiscoveryService } from "../services/ArtifactDiscoveryService";
 import { ArtifactPaths } from "../services/ArtifactPaths";
-
 import { MochawesomeParser } from "../parsers/mochawesome/MochawesomeParser";
-
 import { FailureInvestigationReportGenerator } from "../reports/failure-investigation/FailureInvestigationReportGenerator";
+import { ConfluencePagePublisher } from "../confluence/ConfluencePagePublisher";
 
 async function main() {
   //
@@ -49,6 +47,13 @@ async function main() {
   await generator.generate(testRun);
 
   console.log("Failure investigation report generated");
+
+  const publisher = new ConfluencePagePublisher();
+
+  await publisher.publishMarkdown(
+    "Nightly Failure Investigation",
+    "./reports/failure-investigation/index.md",
+  );
 }
 
 main().catch(console.error);
