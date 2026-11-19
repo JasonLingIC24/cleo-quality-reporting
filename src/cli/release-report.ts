@@ -16,6 +16,7 @@ import { GitHubArtifactDownloader } from "../github/GitHubArtifactDownloader";
 import { TestPlanProgressCalculator } from "../services/TestPlanProgressCalculator";
 import { WorkbookStatusCalculator } from "../services/WorkbookStatusCalculator";
 import { OwnerProgressCalculator } from "../services/OwnerProgressCalculator";
+import { ConfluencePagePublisher } from "../confluence/ConfluencePagePublisher";
 
 async function main() {
   //
@@ -144,6 +145,13 @@ async function main() {
   const reportDate = new Date(process.env.REPORT_DATE ?? Date.now());
 
   await managementGenerator.generate(qualityReport, reportDate);
+
+  const publisher = new ConfluencePagePublisher();
+
+  await publisher.publishMarkdown(
+    "Release Readiness Report",
+    "./reports/management/regression-summary.md",
+  );
 }
 
 main().catch(console.error);
