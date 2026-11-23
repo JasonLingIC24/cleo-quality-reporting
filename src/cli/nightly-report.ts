@@ -8,6 +8,10 @@ import { MochawesomeParser } from "../parsers/mochawesome/MochawesomeParser";
 import { FailureInvestigationReportGenerator } from "../reports/failure-investigation/FailureInvestigationReportGenerator";
 import { ConfluencePagePublisher } from "../confluence/ConfluencePagePublisher";
 import { ConfluencePageIds } from "../confluence/ConfluencePageIds";
+import { NightlyHealthSummary } from "../reports/failure-investigation/models/NightlyHealthSummary";
+import { BackendUnitAdapter } from "../parsers/backend-unit/BackendUnitAdapter";
+import { BackendIntegrationAdapter } from "../parsers/backend-integration/BackendIntegrationAdapter";
+import { FrontendCoverageAdapter } from "../parsers/frontend/FrontendCoverageAdapter";
 
 async function main() {
   //
@@ -40,12 +44,52 @@ async function main() {
     "./artifacts/screenshots",
   );
 
+  const backendUnit = new BackendUnitAdapter().parse(artifacts.backendUnitPath);
+
+  const backendIntegration = new BackendIntegrationAdapter().parse(
+    artifacts.backendIntegrationPath,
+  );
+
+  const frontendCoverage = new FrontendCoverageAdapter().parse(
+    artifacts.frontendPath,
+  );
+
+  const healthSummary: NightlyHealthSummary = {
+    cypress: {
+      total: testRun.totalTests,
+      passed: testRun.passed,
+      failed: testRun.failed,
+      skipped: testRun.skipped,
+    },
+
+    backendUnit: {
+      total: backendUnit.total,
+      passed: backendUnit.passed,
+      failed: backendUnit.failed,
+      skipped: backendUnit.skipped,
+    },
+
+    backendIntegration: {
+      total: backendIntegration.total,
+      passed: backendIntegration.passed,
+      failed: backendIntegration.failed,
+      skipped: backendIntegration.skipped,
+    },
+
+    frontendCoverage: {
+      lines: frontendCoverage.lines,
+      statements: frontendCoverage.statements,
+      functions: frontendCoverage.functions,
+      branches: frontendCoverage.branches,
+    },
+  };
+
   //
   // Generate Failure Report
   //
   const generator = new FailureInvestigationReportGenerator();
 
-  await generator.generate(testRun);
+  await generator.generate(testRun, healthSummary);
 
   console.log("Failure investigation report generated");
 

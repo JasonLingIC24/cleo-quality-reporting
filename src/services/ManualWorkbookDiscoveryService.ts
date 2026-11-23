@@ -23,8 +23,8 @@ export class ManualWorkbookDiscoveryService {
     return allWorkbooks.filter((workbookPath) => {
       const workbookName = path.basename(workbookPath, ".xlsx").toLowerCase();
 
-      return releaseTestPlan.manualWorkbooks.some(
-        (workbook) => workbook.id.toLowerCase() === workbookName,
+      return releaseTestPlan.manualWorkbooks.some((workbook) =>
+        workbookName.startsWith(workbook.workbookId.toLowerCase()),
       );
     });
   }

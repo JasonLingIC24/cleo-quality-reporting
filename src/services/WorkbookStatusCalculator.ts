@@ -10,12 +10,13 @@ export class WorkbookStatusCalculator {
     return releaseTestPlan.manualWorkbooks.map((plannedWorkbook) => {
       const workbook = manualRegression.find(
         (run) =>
-          run.workbookId.toLowerCase() === plannedWorkbook.id.toLowerCase(),
+          run.workbookId.toLowerCase() ===
+          plannedWorkbook.workbookId.toLowerCase(),
       );
 
       if (!workbook) {
         return {
-          workbookId: plannedWorkbook.id,
+          workbookId: plannedWorkbook.workbookId,
           owner: plannedWorkbook.owner,
           status: "NOT_STARTED",
         };
@@ -27,7 +28,7 @@ export class WorkbookStatusCalculator {
         workbook.assertionCount > 0
       ) {
         return {
-          workbookId: plannedWorkbook.id,
+          workbookId: plannedWorkbook.workbookId,
           owner: plannedWorkbook.owner,
           status: "READY",
         };
@@ -35,7 +36,7 @@ export class WorkbookStatusCalculator {
 
       if (workbook.passed + workbook.failed > 0 && workbook.notRun > 0) {
         return {
-          workbookId: plannedWorkbook.id,
+          workbookId: plannedWorkbook.workbookId,
           owner: plannedWorkbook.owner,
           status: "IN_PROGRESS",
         };
@@ -43,14 +44,14 @@ export class WorkbookStatusCalculator {
 
       if (workbook.notRun === 0) {
         return {
-          workbookId: plannedWorkbook.id,
+          workbookId: plannedWorkbook.workbookId,
           owner: plannedWorkbook.owner,
           status: "COMPLETE",
         };
       }
 
       return {
-        workbookId: plannedWorkbook.id,
+        workbookId: plannedWorkbook.workbookId,
         owner: plannedWorkbook.owner,
         status: "NOT_STARTED",
       };

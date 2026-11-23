@@ -17,7 +17,9 @@ export class ManualRegressionWorkbookAdapter {
       throw new Error(`Execution sheet missing: ${workbookPath}`);
     }
 
-    const workbookId = path.basename(workbookPath, ".xlsx");
+    const workbookId =
+      this.getMetadataValue(executionSheet, "Workbook ID") ||
+      path.basename(workbookPath, ".xlsx");
 
     const featureId =
       this.getMetadataValue(executionSheet, "Feature ID") ||
@@ -143,24 +145,6 @@ export class ManualRegressionWorkbookAdapter {
     });
 
     return count;
-  }
-
-  private countUniqueTestCases(sheet: ExcelJS.Worksheet): number {
-    const scenarios = new Set<string>();
-
-    sheet.eachRow((row, rowNumber) => {
-      if (rowNumber <= 11) {
-        return;
-      }
-
-      const testCaseId = String(row.getCell("A").value ?? "").trim();
-
-      if (testCaseId) {
-        scenarios.add(testCaseId);
-      }
-    });
-
-    return scenarios.size;
   }
 
   private extractFailures(

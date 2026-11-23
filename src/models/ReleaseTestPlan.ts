@@ -9,7 +9,7 @@ export interface ReleaseTestPlan {
 }
 
 export interface ReleaseWorkbook {
-  id: string;
+  workbookId: string;
 
   owner?: string;
 

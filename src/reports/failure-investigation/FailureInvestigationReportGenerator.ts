@@ -5,14 +5,18 @@ import { FailedTest, TestRun } from "../../models";
 import { buildEngineerIndex } from "./buildInvestigationIndex";
 import { buildFailureGroups } from "./buildFailureGroups";
 import { buildSpecSummary } from "./buildSpecSummary";
+import { NightlyHealthSummary } from "./models/NightlyHealthSummary";
 
 export class FailureInvestigationReportGenerator {
-  async generate(testRun: TestRun): Promise<void> {
+  async generate(
+    testRun: TestRun,
+    healthSummary: NightlyHealthSummary,
+  ): Promise<void> {
     const outputDir = "./reports/failure-investigation";
 
     await fs.mkdir(outputDir, { recursive: true });
 
-    const indexContent = buildEngineerIndex(testRun.failedTests);
+    const indexContent = buildEngineerIndex(testRun.failedTests, healthSummary);
 
     await fs.writeFile(path.join(outputDir, "index.md"), indexContent, "utf8");
 
