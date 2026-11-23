@@ -28,18 +28,32 @@ export function buildEngineerIndex(
 
   lines.push(
     `| Backend Unit | ${healthStatus(
-      healthSummary.backendUnit.failed > 0 ? "FAILED" : "HEALTHY",
-    )} | ${healthSummary.backendUnit.passed}/${healthSummary.backendUnit.total} passed |`,
+      healthSummary.backendUnit.total === 0
+        ? "UNAVAILABLE"
+        : healthSummary.backendUnit.failed > 0
+          ? "FAILED"
+          : "HEALTHY",
+    )} | ${
+      healthSummary.backendUnit.total === 0
+        ? "Summary artifact missing"
+        : `${healthSummary.backendUnit.passed}/${healthSummary.backendUnit.total} passed`
+    } |`,
   );
 
   lines.push(
     `| Backend Integration | ${healthStatus(
-      healthSummary.backendIntegration.failed > 0
-        ? "FAILED"
-        : healthSummary.backendIntegration.skipped > 0
-          ? "MONITOR"
-          : "HEALTHY",
-    )} | ${healthSummary.backendIntegration.passed} passed, ${healthSummary.backendIntegration.skipped} skipped |`,
+      healthSummary.backendIntegration.total === 0
+        ? "UNAVAILABLE"
+        : healthSummary.backendIntegration.failed > 0
+          ? "FAILED"
+          : healthSummary.backendIntegration.skipped > 0
+            ? "MONITOR"
+            : "HEALTHY",
+    )} | ${
+      healthSummary.backendIntegration.total === 0
+        ? "Summary artifact missing"
+        : `${healthSummary.backendIntegration.passed} passed, ${healthSummary.backendIntegration.skipped} skipped`
+    } |`,
   );
 
   lines.push(
@@ -208,6 +222,9 @@ function healthStatus(status: string): string {
 
     case "LOW":
       return "⚠️ Low";
+
+    case "UNAVAILABLE":
+      return "⚪ Not Available";
 
     case "FAILED":
       return "🔴 Failed";

@@ -6,7 +6,7 @@
   "scripts": {
     "release-report": "tsx src/cli/release-report.ts",
     "nightly-report": "tsx src/cli/nightly-report.ts",
-    "test-confluence": "tsx src/cli/test-confluence.ts",
+    "teams-report": "tsx src/cli/teams-report.ts",
     "build": "tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

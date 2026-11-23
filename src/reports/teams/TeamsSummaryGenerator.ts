@@ -6,7 +6,6 @@ import { QualityReport } from "../../models/QualityReport";
 import { buildCandidateDefects } from "../management/buildCandidateDefects";
 import { buildFailureSummary } from "../management/buildFailureSummary";
 import { buildFeatureSummary } from "../management/buildFeatureSummary";
-import { buildReleaseRecommendation } from "../management/buildReleaseRecommendation";
 
 export class TeamsSummaryGenerator {
   async generate(report: QualityReport): Promise<void> {
@@ -15,11 +14,6 @@ export class TeamsSummaryGenerator {
     fs.mkdirSync(outputDir, {
       recursive: true,
     });
-
-    const recommendation = {
-      status: "Not Evaluated",
-      rationale: [],
-    };
 
     const cypress = report.cypress;
 
@@ -34,6 +28,24 @@ export class TeamsSummaryGenerator {
     const features = buildFeatureSummary(cypress.failedTests);
 
     const defects = buildCandidateDefects(cypress.failedTests);
+
+    const topCategory = categories[0];
+
+    const topFeature = features[0];
+
+    const failingSpecs = new Set(
+      cypress.failedTests.map((failure) => failure.specFile),
+    ).size;
+
+    const topSpec = [...cypress.failedTests]
+      .reduce((grouped, failure) => {
+        grouped.set(failure.specFile, (grouped.get(failure.specFile) ?? 0) + 1);
+
+        return grouped;
+      }, new Map<string, number>())
+      .entries();
+
+    const topSpecRow = [...topSpec].sort((a, b) => b[1] - a[1])[0];
 
     const lines: string[] = [];
 
@@ -55,59 +67,103 @@ export class TeamsSummaryGenerator {
 
     lines.push("");
 
-    lines.push(`Recommendation: ${recommendation.status}`);
+    //
+    // Nightly Health
+    //
 
-    lines.push("");
+    const backendUnitStatus = this.backendUnitStatus(
+      backendUnit.total,
+      backendUnit.failed,
+    );
 
-    lines.push("Automated Quality");
+    const backendIntegrationStatus = this.backendIntegrationStatus(
+      backendIntegration.total,
+      backendIntegration.failed,
+      backendIntegration.skipped,
+    );
+
+    const frontendCoverageStatus = this.frontendCoverageStatus(
+      frontendCoverage.lines,
+    );
+
+    lines.push("Nightly Health");
 
     lines.push("");
 
     lines.push(
-      `• Cypress: ${cypress.totalTests} tests (${cypress.failed} failed)`,
+      `🔴 Cypress: ${cypress.failed} failures from ${cypress.totalTests} tests`,
     );
 
     lines.push(
-      `• Backend Unit: ${backendUnit.total} tests (${backendUnit.failed} failed)`,
+      `${this.healthStatus(backendUnitStatus)} Backend Unit: ${
+        backendUnit.total === 0
+          ? "Summary unavailable"
+          : `${backendUnit.passed}/${backendUnit.total} passed`
+      }`,
     );
 
     lines.push(
-      `• Backend Integration: ${backendIntegration.total} tests (${backendIntegration.failed} failed)`,
+      `${this.healthStatus(backendIntegrationStatus)} Backend Integration: ${
+        backendIntegration.total === 0
+          ? "Summary unavailable"
+          : `${backendIntegration.passed} passed, ${backendIntegration.skipped} skipped`
+      }`,
+    );
+
+    lines.push(
+      `${this.healthStatus(frontendCoverageStatus)} Frontend Coverage: ${frontendCoverage.lines}% line coverage`,
     );
 
     lines.push("");
 
-    lines.push("Frontend Coverage");
+    //
+    // Executive Summary
+    //
+
+    lines.push("Executive Summary");
 
     lines.push("");
 
-    lines.push(`• Lines: ${frontendCoverage.lines}%`);
-
-    lines.push(`• Branches: ${frontendCoverage.branches}%`);
+    lines.push(`Failed Tests: ${cypress.failed}`);
 
     lines.push("");
 
-    lines.push("Top Failure Categories:");
+    lines.push(`Failing Specs: ${failingSpecs}`);
 
     lines.push("");
 
-    for (const category of categories.slice(0, 3)) {
-      lines.push(`• ${category.category} (${category.count})`);
+    if (topCategory) {
+      lines.push(
+        `Top Failure Category: ${topCategory.category} (${topCategory.count} failures)`,
+      );
+
+      lines.push("");
     }
 
-    lines.push("");
+    if (topFeature) {
+      lines.push(
+        `Top Impacted Feature: ${topFeature.feature} (${topFeature.count} failures)`,
+      );
 
-    lines.push("Top Impacted Features:");
-
-    lines.push("");
-
-    for (const feature of features.slice(0, 3)) {
-      lines.push(`• ${feature.feature} (${feature.count})`);
+      lines.push("");
     }
 
-    lines.push("");
+    if (topSpecRow) {
+      lines.push(
+        `Top Failing Spec: ${
+          topSpecRow[0].split("/").pop()?.replace(".spec.ts", ".md") ??
+          topSpecRow[0]
+        } (${topSpecRow[1]} failures)`,
+      );
 
-    lines.push("Key Issues:");
+      lines.push("");
+    }
+
+    //
+    // Key Issues
+    //
+
+    lines.push("Key Issues");
 
     lines.push("");
 
@@ -124,7 +180,67 @@ export class TeamsSummaryGenerator {
       lines.join("\n"),
       "utf8",
     );
+  }
 
-    console.log("Teams summary generated");
+  private healthStatus(status: string): string {
+    switch (status) {
+      case "HEALTHY":
+        return "✅";
+
+      case "MONITOR":
+        return "⚠️";
+
+      case "LOW":
+        return "⚠️";
+
+      case "UNAVAILABLE":
+        return "⚪";
+
+      case "FAILED":
+        return "🔴";
+
+      default:
+        return "⚪";
+    }
+  }
+
+  private backendUnitStatus(total: number, failed: number): string {
+    if (total === 0) {
+      return "UNAVAILABLE";
+    }
+
+    return failed > 0 ? "FAILED" : "HEALTHY";
+  }
+
+  private backendIntegrationStatus(
+    total: number,
+    failed: number,
+    skipped: number,
+  ): string {
+    if (total === 0) {
+      return "UNAVAILABLE";
+    }
+
+    if (failed > 0) {
+      return "FAILED";
+    }
+
+    if (skipped > 0) {
+      return "MONITOR";
+    }
+
+    return "HEALTHY";
+  }
+
+  private frontendCoverageStatus(lines: number): string {
+    if (lines >= 80) {
+      return "HEALTHY";
+    }
+
+    if (lines >= 70) {
+      return "MONITOR";
+    }
+
+    return "LOW";
   }
 }

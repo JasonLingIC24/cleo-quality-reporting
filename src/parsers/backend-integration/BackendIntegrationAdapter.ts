@@ -8,6 +8,26 @@ export class BackendIntegrationAdapter {
   parse(artifactPath: string): TestSuiteRun {
     const file = path.join(artifactPath, "integration-summary.json");
 
+    if (!fs.existsSync(file)) {
+      console.warn(`Backend integration summary not found: ${file}`);
+
+      return {
+        suiteName: "Backend Integration",
+
+        suiteType: "backend-integration",
+
+        total: 0,
+
+        passed: 0,
+
+        failed: 0,
+
+        skipped: 0,
+
+        failures: [],
+      };
+    }
+
     const json = JSON.parse(fs.readFileSync(file, "utf8"));
 
     const failures = parseFailures(json.failedTests ?? []);

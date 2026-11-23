@@ -92,8 +92,6 @@ export class GitHubArtifactDownloader {
 
     const run = payload.workflow_runs?.[0];
 
-    console.log(JSON.stringify(payload.total_count));
-
     if (!run) {
       throw new Error(`No successful runs found for ${workflowFile}`);
     }
