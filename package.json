@@ -7,6 +7,7 @@
     "release-report": "tsx src/cli/release-report.ts",
     "nightly-report": "tsx src/cli/nightly-report.ts",
     "teams-report": "tsx src/cli/teams-report.ts",
+    "create-release-plan": "tsx src/cli/create-release-plan.ts",
     "build": "tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

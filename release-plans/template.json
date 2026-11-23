@@ -1,0 +1,76 @@
+{
+  "releaseVersion": "",
+  "releaseDate": "",
+
+  "githubRunId": "",
+
+  "description": "",
+
+  "manualWorkbooks": [
+    {
+      "workbookId": "audit-log-viewer",
+      "owner": "",
+      "required": true
+    },
+    {
+      "workbookId": "bars",
+      "owner": "",
+      "required": true
+    },
+    {
+      "workbookId": "cis2",
+      "owner": "",
+      "required": true
+    },
+    {
+      "workbookId": "cpis",
+      "owner": "",
+      "required": true
+    },
+    {
+      "workbookId": "ecds",
+      "owner": "",
+      "required": true
+    },
+    {
+      "workbookId": "eva-2910",
+      "owner": "",
+      "required": true
+    },
+    {
+      "workbookId": "general-checks",
+      "owner": "",
+      "required": true
+    },
+    {
+      "workbookId": "gpc-send-doc",
+      "owner": "",
+      "required": true
+    },
+    {
+      "workbookId": "itk3",
+      "owner": "",
+      "required": true
+    },
+    {
+      "workbookId": "prescribing",
+      "owner": "",
+      "required": true
+    },
+    {
+      "workbookId": "user-login-profiles",
+      "owner": "",
+      "required": true
+    },
+    {
+      "workbookId": "vwr-specifics",
+      "owner": "",
+      "required": true
+    },
+    {
+      "workbookId": "vwr-white-labeling",
+      "owner": "",
+      "required": true
+    }
+  ]
+}

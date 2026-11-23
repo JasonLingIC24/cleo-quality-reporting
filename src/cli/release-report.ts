@@ -24,9 +24,7 @@ async function main() {
   // Load Release Test Plan
   //
 
-  const releaseTestPlan = ReleaseTestPlanAdapter.load(
-    "./release-plans/release-test-plan-v26.23.1.json",
-  );
+  const releaseTestPlan = ReleaseTestPlanAdapter.load(getReleasePlanPath());
 
   const runId = getRunId(releaseTestPlan.githubRunId);
 
@@ -159,6 +157,20 @@ async function main() {
     ConfluencePageIds.releaseParentPageId,
     "./reports/management/regression-summary.md",
   );
+}
+
+function getReleasePlanPath(): string {
+  const arg = process.argv[2];
+
+  if (!arg) {
+    throw new Error("Usage: npm run release-report -- v26.24.0");
+  }
+
+  if (arg.endsWith(".json")) {
+    return arg;
+  }
+
+  return `./release-plans/release-test-plan-${arg}.json`;
 }
 
 main().catch(console.error);
