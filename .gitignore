@@ -1,13 +1,16 @@
+# module directories compiler output
 node_modules/
 dist/
-coverage/
+
+/assets/
 
 # Generated reports
 /reports/
 !reports/.gitkeep
 
 # Downloaded test artifacts
-artifacts/
+artifacts/runs/
+!artifacts/manual/.gitkeep
 
 # Keep directory structure if required
 !artifacts/.gitkeep
