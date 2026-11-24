@@ -1,0 +1,67 @@
+{
+  "releaseVersion": "v26.24.1",
+  "releaseDate": "2026-11-23",
+  "githubRunId": "45154233830",
+  "manualWorkbooks": [
+    {
+      "workbookId": "audit-log-viewer",
+      "owner": "QA Team",
+      "required": true
+    },
+    {
+      "workbookId": "bars",
+      "owner": "QA Team",
+      "required": false
+    },
+    {
+      "workbookId": "cis2",
+      "owner": "QA Team",
+      "required": true
+    },
+    {
+      "workbookId": "cpis",
+      "owner": "QA Team",
+      "required": false
+    },
+    {
+      "workbookId": "ecds",
+      "owner": "QA Team",
+      "required": false
+    },
+    {
+      "workbookId": "general-checks",
+      "owner": "QA Team",
+      "required": true
+    },
+    {
+      "workbookId": "gpc-send-doc",
+      "owner": "QA Team",
+      "required": false
+    },
+    {
+      "workbookId": "itk3",
+      "owner": "QA Team",
+      "required": false
+    },
+    {
+      "workbookId": "prescribing",
+      "owner": "QA Team",
+      "required": false
+    },
+    {
+      "workbookId": "user-login-profiles",
+      "owner": "QA Team",
+      "required": true
+    },
+    {
+      "workbookId": "vwr-specifics",
+      "owner": "QA Team",
+      "required": false
+    },
+    {
+      "workbookId": "vwr-white-labeling",
+      "owner": "QA Team",
+      "required": false
+    }
+  ]
+}
