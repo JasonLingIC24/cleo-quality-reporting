@@ -10,67 +10,80 @@
     {
       "workbookId": "audit-log-viewer",
       "owner": "",
-      "required": true
+      "required": true,
+      "reason": ""
     },
     {
       "workbookId": "bars",
       "owner": "",
-      "required": true
+      "required": true,
+      "reason": ""
     },
     {
       "workbookId": "cis2",
       "owner": "",
-      "required": true
+      "required": true,
+      "reason": ""
     },
     {
       "workbookId": "cpis",
       "owner": "",
-      "required": true
+      "required": true,
+      "reason": ""
     },
     {
       "workbookId": "ecds",
       "owner": "",
-      "required": true
+      "required": true,
+      "reason": ""
     },
     {
       "workbookId": "eva-2910",
       "owner": "",
-      "required": true
+      "required": true,
+      "reason": ""
     },
     {
       "workbookId": "general-checks",
       "owner": "",
-      "required": true
+      "required": true,
+      "reason": ""
     },
     {
       "workbookId": "gpc-send-doc",
       "owner": "",
-      "required": true
+      "required": true,
+      "reason": ""
     },
     {
       "workbookId": "itk3",
       "owner": "",
-      "required": true
+      "required": true,
+      "reason": ""
     },
     {
       "workbookId": "prescribing",
       "owner": "",
-      "required": true
+      "required": true,
+      "reason": ""
     },
     {
       "workbookId": "user-login-profiles",
       "owner": "",
-      "required": true
+      "required": true,
+      "reason": ""
     },
     {
       "workbookId": "vwr-specifics",
       "owner": "",
-      "required": true
+      "required": true,
+      "reason": ""
     },
     {
       "workbookId": "vwr-white-labeling",
       "owner": "",
-      "required": true
+      "required": true,
+      "reason": ""
     }
   ]
 }

@@ -14,4 +14,6 @@ export interface ReleaseWorkbook {
   owner?: string;
 
   required?: boolean;
+
+  reason?: string;
 }

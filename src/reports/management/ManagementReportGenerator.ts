@@ -36,6 +36,16 @@ export class ManagementReportGenerator {
 
     const lines: string[] = [];
 
+    const requiredWorkbookIds =
+      report.releaseTestPlan?.manualWorkbooks
+        .filter((workbook) => workbook.required)
+        .map((workbook) => workbook.workbookId.toLowerCase()) ?? [];
+
+    const releaseManualRegression = (report.manualRegression ?? []).filter(
+      (workbook) =>
+        requiredWorkbookIds.includes(workbook.workbookId.toLowerCase()),
+    );
+
     //
     // Header
     //
@@ -119,14 +129,18 @@ export class ManagementReportGenerator {
       lines.push("");
 
       lines.push(
-        `Planned Manual Workbooks: ${report.releaseTestPlan.manualWorkbooks.length}`,
+        `Planned Manual Workbooks: ${
+          report.releaseTestPlan.manualWorkbooks.filter(
+            (workbook) => workbook.required,
+          ).length
+        }`,
       );
 
       lines.push("");
 
-      lines.push("| Workbook | Owner | Status |");
+      lines.push("| Workbook | Owner | Reason | Status |");
 
-      lines.push("|----------|-------|--------|");
+      lines.push("|----------|-------|--------|--------|");
 
       for (const workbook of report.workbookStatuses ?? []) {
         const status =
@@ -138,12 +152,42 @@ export class ManagementReportGenerator {
                 ? "🔵 Ready"
                 : "⚪ Not Started";
 
+        const plannedWorkbook = report.releaseTestPlan?.manualWorkbooks.find(
+          (planned) =>
+            planned.workbookId.toLowerCase() ===
+            workbook.workbookId.toLowerCase(),
+        );
+
+        const reason = plannedWorkbook?.reason ?? "Not specified";
+
         lines.push(
-          `| ${workbook.workbookId} | ${workbook.owner ?? "Unassigned"} | ${status} |`,
+          `| ${workbook.workbookId} | ${workbook.owner ?? "Unassigned"} | ${reason} | ${status} |`,
         );
       }
 
       lines.push("");
+
+      const excludedWorkbooks = report.releaseTestPlan.manualWorkbooks.filter(
+        (workbook) => !workbook.required,
+      );
+
+      if (excludedWorkbooks.length > 0) {
+        lines.push("### Excluded Workbooks");
+
+        lines.push("");
+
+        lines.push("| Workbook | Owner | Reason |");
+
+        lines.push("|----------|-------|--------|");
+
+        for (const workbook of excludedWorkbooks) {
+          lines.push(
+            `| ${workbook.workbookId} | ${workbook.owner ?? "Unassigned"} | ${workbook.reason ?? "Not specified"} |`,
+          );
+        }
+
+        lines.push("");
+      }
     }
 
     //
@@ -173,14 +217,27 @@ export class ManagementReportGenerator {
 
       let status = "⚪ Not Started";
 
-      if (progress.completeWorkbooks === progress.plannedWorkbooks) {
-        status = "✅ Complete";
-      } else if (progress.inProgressWorkbooks > 0) {
+      const releaseManualRegression = (report.manualRegression ?? []).filter(
+        (workbook) =>
+          requiredWorkbookIds.includes(workbook.workbookId.toLowerCase()),
+      );
+
+      const manualFailed = releaseManualRegression.reduce(
+        (sum, workbook) => sum + workbook.failed,
+        0,
+      );
+
+      const manualNotRun = releaseManualRegression.reduce(
+        (sum, workbook) => sum + workbook.notRun,
+        0,
+      );
+
+      if (manualFailed > 0) {
+        status = "🔴 Failed";
+      } else if (manualNotRun > 0) {
         status = "🟡 In Progress";
-      } else if (progress.readyWorkbooks > 0) {
-        status = "🔵 Ready";
-      } else if (progress.notStartedWorkbooks > 0) {
-        status = "⚪ Not Started";
+      } else if (progress.plannedWorkbooks > 0) {
+        status = "✅ Complete";
       }
 
       lines.push(`Overall Status: ${status}`);
@@ -306,7 +363,7 @@ export class ManagementReportGenerator {
     // Manual Regression
     //
 
-    if (report.manualRegression && report.manualRegression.length > 0) {
+    if (releaseManualRegression.length > 0) {
       lines.push("## Manual Regression");
 
       lines.push("");
@@ -319,7 +376,7 @@ export class ManagementReportGenerator {
         "|---------|----|----------:|-----------:|-----:|-----:|--------:|----:|",
       );
 
-      for (const workbook of report.manualRegression) {
+      for (const workbook of releaseManualRegression) {
         lines.push(
           `| ${workbook.featureName} | ${workbook.featureId} | ${workbook.scenarioCount} | ${workbook.assertionCount} | ${workbook.passed} | ${workbook.failed} | ${workbook.notRun} | ${workbook.notApplicable} |`,
         );
@@ -327,27 +384,27 @@ export class ManagementReportGenerator {
 
       lines.push("");
 
-      const totalAssertions = report.manualRegression.reduce(
+      const totalAssertions = releaseManualRegression.reduce(
         (sum, workbook) => sum + workbook.assertionCount,
         0,
       );
 
-      const totalPassed = report.manualRegression.reduce(
+      const totalPassed = releaseManualRegression.reduce(
         (sum, workbook) => sum + workbook.passed,
         0,
       );
 
-      const totalFailed = report.manualRegression.reduce(
+      const totalFailed = releaseManualRegression.reduce(
         (sum, workbook) => sum + workbook.failed,
         0,
       );
 
-      const totalNotRun = report.manualRegression.reduce(
+      const totalNotRun = releaseManualRegression.reduce(
         (sum, workbook) => sum + workbook.notRun,
         0,
       );
 
-      const totalNotApplicable = report.manualRegression.reduce(
+      const totalNotApplicable = releaseManualRegression.reduce(
         (sum, workbook) => sum + workbook.notApplicable,
         0,
       );
@@ -356,7 +413,7 @@ export class ManagementReportGenerator {
 
       lines.push("");
 
-      lines.push(`- Workbook Count: ${report.manualRegression.length}`);
+      lines.push(`- Workbook Count: ${releaseManualRegression.length}`);
 
       lines.push(`- Total Assertions: ${totalAssertions}`);
 

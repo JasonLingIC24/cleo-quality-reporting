@@ -25,20 +25,26 @@ export class ReleaseAssessmentFactory {
       report.backendUnit.skipped +
       report.backendIntegration.skipped;
 
+    const requiredWorkbookIds =
+      report.releaseTestPlan?.manualWorkbooks
+        .filter((workbook) => workbook.required)
+        .map((workbook) => workbook.workbookId.toLowerCase()) ?? [];
+
+    const requiredManualRuns = (report.manualRegression ?? []).filter(
+      (workbook) =>
+        requiredWorkbookIds.includes(workbook.workbookId.toLowerCase()),
+    );
+
     const manualFailures =
-      report.manualRegression?.reduce(
-        (sum, workbook) => sum + workbook.failed,
-        0,
-      ) ?? 0;
+      requiredManualRuns.reduce((sum, workbook) => sum + workbook.failed, 0) ??
+      0;
 
     const manualNotRun =
-      report.manualRegression?.reduce(
-        (sum, workbook) => sum + workbook.notRun,
-        0,
-      ) ?? 0;
+      requiredManualRuns.reduce((sum, workbook) => sum + workbook.notRun, 0) ??
+      0;
 
     const manualNotApplicable =
-      report.manualRegression?.reduce(
+      requiredManualRuns.reduce(
         (sum, workbook) => sum + workbook.notApplicable,
         0,
       ) ?? 0;

@@ -42,23 +42,33 @@ export function buildReleaseRecommendation(
   // Manual Regression
   //
 
-  const manualFailures =
-    report.manualRegression?.reduce(
-      (sum, workbook) => sum + workbook.failed,
-      0,
-    ) ?? 0;
+  //
+  // Manual Regression
+  //
 
-  const manualNotRun =
-    report.manualRegression?.reduce(
-      (sum, workbook) => sum + workbook.notRun,
-      0,
-    ) ?? 0;
+  const requiredWorkbookIds =
+    report.releaseTestPlan?.manualWorkbooks
+      .filter((workbook) => workbook.required)
+      .map((workbook) => workbook.workbookId.toLowerCase()) ?? [];
 
-  const manualNotApplicable =
-    report.manualRegression?.reduce(
-      (sum, workbook) => sum + workbook.notApplicable,
-      0,
-    ) ?? 0;
+  const manualRuns = (report.manualRegression ?? []).filter((run) =>
+    requiredWorkbookIds.includes(run.workbookId.toLowerCase()),
+  );
+
+  const manualFailures = manualRuns.reduce(
+    (sum, workbook) => sum + workbook.failed,
+    0,
+  );
+
+  const manualNotRun = manualRuns.reduce(
+    (sum, workbook) => sum + workbook.notRun,
+    0,
+  );
+
+  const manualNotApplicable = manualRuns.reduce(
+    (sum, workbook) => sum + workbook.notApplicable,
+    0,
+  );
 
   //
   // Rationale
@@ -83,8 +93,6 @@ export function buildReleaseRecommendation(
   if (backendUnit.failed > 0) {
     rationale.push(`${backendUnit.failed} Backend Unit failures detected`);
   }
-
-  const manualRuns = report.manualRegression ?? [];
 
   if (manualFailures > 0) {
     rationale.push(

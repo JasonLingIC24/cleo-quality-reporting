@@ -1,67 +1,79 @@
 {
   "releaseVersion": "v26.24.1",
   "releaseDate": "2026-11-23",
-  "githubRunId": "45154233830",
+  "githubRunId": "45426083976",
   "manualWorkbooks": [
     {
       "workbookId": "audit-log-viewer",
       "owner": "QA Team",
-      "required": true
+      "required": true,
+      "reason": "Audit Log functionality updated in this release"
     },
     {
       "workbookId": "bars",
       "owner": "QA Team",
-      "required": false
+      "required": false,
+      "reason": "Bars functionality has not been updated in this release"
     },
     {
       "workbookId": "cis2",
       "owner": "QA Team",
-      "required": true
+      "required": true,
+      "reason": "CIS2 functionality updated in this release"
     },
     {
       "workbookId": "cpis",
       "owner": "QA Team",
-      "required": false
+      "required": false,
+      "reason": "CPIS functionality has not been updated in this release"
     },
     {
       "workbookId": "ecds",
       "owner": "QA Team",
-      "required": false
+      "required": false,
+      "reason": "ECDS functionality has not been updated in this release"
     },
     {
       "workbookId": "general-checks",
       "owner": "QA Team",
-      "required": true
+      "required": true,
+      "reason": "General Checks functionality updated in this release"
     },
     {
       "workbookId": "gpc-send-doc",
       "owner": "QA Team",
-      "required": false
+      "required": false,
+      "reason": "GPC Send Doc functionality has not been updated in this release"
     },
     {
       "workbookId": "itk3",
       "owner": "QA Team",
-      "required": false
+      "required": false,
+      "reason": "ITK3 functionality has not been updated in this release"
     },
     {
       "workbookId": "prescribing",
       "owner": "QA Team",
-      "required": false
+      "required": false,
+      "reason": "Prescribing functionality has not been updated in this release"
     },
     {
       "workbookId": "user-login-profiles",
       "owner": "QA Team",
-      "required": true
+      "required": true,
+      "reason": "User Login Profiles functionality updated in this release"
     },
     {
       "workbookId": "vwr-specifics",
       "owner": "QA Team",
-      "required": false
+      "required": false,
+      "reason": "VWR Specifics functionality has not been updated in this release"
     },
     {
       "workbookId": "vwr-white-labeling",
       "owner": "QA Team",
-      "required": false
+      "required": false,
+      "reason": "VWR White Labeling functionality has not been updated in this release"
     }
   ]
 }
