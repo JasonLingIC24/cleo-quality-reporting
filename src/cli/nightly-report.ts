@@ -33,7 +33,35 @@ async function main() {
   // Discover artifacts
   //
   const artifacts = ArtifactDiscoveryService.findForRun(runDirectory);
+  console.log("");
 
+  if (!artifacts.cypressPath) {
+    throw new Error(
+      "⚠ Cypress artifact not found. Nightly report cannot be generated.",
+    );
+  }
+
+  console.log("✓ Cypress Artifact Found");
+
+  console.log(
+    artifacts.backendUnitPath
+      ? "✓ Backend Unit Artifact Found"
+      : "⚠ Backend Unit Artifact Missing",
+  );
+
+  console.log(
+    artifacts.backendIntegrationPath
+      ? "✓ Backend Integration Artifact Found"
+      : "⚠ Backend Integration Artifact Missing",
+  );
+
+  console.log(
+    artifacts.frontendPath
+      ? "✓ Frontend Coverage Artifact Found"
+      : "⚠ Frontend Coverage Artifact Missing",
+  );
+
+  console.log("");
   //
   // Parse Cypress Results
   //

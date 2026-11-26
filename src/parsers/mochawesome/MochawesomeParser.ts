@@ -4,24 +4,32 @@ import { extractFailedTests } from "./extractFailedTests";
 
 export class MochawesomeParser {
   async parse(reportPath: string, screenshotsRoot: string): Promise<TestRun> {
-    const content = await fs.readFile(reportPath, "utf8");
+    try {
+      const content = await fs.readFile(reportPath, "utf8");
 
-    const json = JSON.parse(content);
+      const json = JSON.parse(content);
 
-    console.log("Loaded Mochawesome File");
+      console.log("Loaded Mochawesome File");
 
-    return {
-      executionDate: json.stats.start,
+      return {
+        executionDate: json.stats.start,
+        totalTests: json.stats.tests,
+        passed: json.stats.passes,
+        failed: json.stats.failures,
+        skipped: json.stats.skipped,
+        failedTests: extractFailedTests(json.results, screenshotsRoot),
+      };
+    } catch (error) {
+      console.warn(`Unable to load Mochawesome report: ${reportPath}`);
 
-      totalTests: json.stats.tests,
-
-      passed: json.stats.passes,
-
-      failed: json.stats.failures,
-
-      skipped: json.stats.skipped,
-
-      failedTests: extractFailedTests(json.results, screenshotsRoot),
-    };
+      return {
+        executionDate: new Date().toISOString(),
+        totalTests: 0,
+        passed: 0,
+        failed: 0,
+        skipped: 0,
+        failedTests: [],
+      };
+    }
   }
 }

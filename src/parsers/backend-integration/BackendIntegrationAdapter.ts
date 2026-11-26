@@ -13,17 +13,11 @@ export class BackendIntegrationAdapter {
 
       return {
         suiteName: "Backend Integration",
-
         suiteType: "backend-integration",
-
         total: 0,
-
         passed: 0,
-
         failed: 0,
-
         skipped: 0,
-
         failures: [],
       };
     }
@@ -34,17 +28,11 @@ export class BackendIntegrationAdapter {
 
     return {
       suiteName: json.title,
-
       suiteType: "backend-integration",
-
       total: json.total,
-
       passed: json.passed,
-
       failed: json.failed,
-
       skipped: json.skipped,
-
       failures,
     };
   }
